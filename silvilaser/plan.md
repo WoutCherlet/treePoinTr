@@ -9,6 +9,8 @@ Occlusion mapping and completion: demo on CLS data
     - Then show point cloud completion experiment and discuss why could be useful (as compared to just foundational model)
     - Talk about potential future work: integrating the two steps, pretraining, other types of data: winter vs summer, UAV+TLS
 
+Note: only discuss Peru 1 and 2 and COL for co-author issue
+
 ### Part one: occlusion mapping on CLS data: already done
 
 maybe rerun with empty pulses modelling? as we can use this already as big part of presentation
