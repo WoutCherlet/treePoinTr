@@ -40,8 +40,6 @@ def bounding_box(points, min_x=-np.inf, max_x=np.inf, min_y=-np.inf,
     return bb_filter
 
 
-
-
 # function for cutting point cloud into cubes (voxelizing), with four different voxel sizes and center points
 
 def cut_point_cloud(point_cloud, outpath, size1, size2, size3, size4):
@@ -58,14 +56,19 @@ def cut_point_cloud(point_cloud, outpath, size1, size2, size3, size4):
     min_z = np.min(point_cloud[:, 2])
     max_z = np.max(point_cloud[:, 2])
 
+    print(f"Cutting with size 1 ({size1})")
+
     # Calculate the number of cubes in each dimension
     cube_size = size1
     num_cubes_x = int(np.ceil((max_x - min_x) / cube_size))
     num_cubes_y = int(np.ceil((max_y - min_y) / cube_size))
     num_cubes_z = int(np.ceil((max_z - min_z) / cube_size))
 
+    print(f"Total number cubes: {num_cubes_x} (x) * {num_cubes_y} (y) * {num_cubes_z} (z) = {num_cubes_x*num_cubes_y*num_cubes_z}")
+
     # Iterate over the cubes and save the points in each non-empty cube as a separate .xyz file
     for i in range(num_cubes_x):
+        print(f" {i} / {num_cubes_x} (x)")
         for j in range(num_cubes_y):
             for k in range(num_cubes_z):
                 # Define the cube boundaries
@@ -104,14 +107,20 @@ def cut_point_cloud(point_cloud, outpath, size1, size2, size3, size4):
     min_z = np.min(point_cloud[:, 2]) + 0.5
     max_z = np.max(point_cloud[:, 2]) + 0.5
 
+    
+    print(f"Cutting with size 2 ({size2})")
+
     # Calculate the number of cubes in each dimension
     cube_size = size2
     num_cubes_x = int(np.ceil((max_x - min_x) / cube_size))
     num_cubes_y = int(np.ceil((max_y - min_y) / cube_size))
     num_cubes_z = int(np.ceil((max_z - min_z) / cube_size))
 
+    print(f"Total number cubes: {num_cubes_x} (x) * {num_cubes_y} (y) * {num_cubes_z} (z) = {num_cubes_x*num_cubes_y*num_cubes_z}")
+
     # Iterate over the cubes and save the points in each non-empty cube as a separate .xyz file
     for i in range(num_cubes_x):
+        print(f" {i} / {num_cubes_x} (x)")
         for j in range(num_cubes_y):
             for k in range(num_cubes_z):
                 # Define the cube boundaries
@@ -153,14 +162,19 @@ def cut_point_cloud(point_cloud, outpath, size1, size2, size3, size4):
     min_z = np.min(point_cloud[:, 2]) - 0.5
     max_z = np.max(point_cloud[:, 2]) - 0.5
 
+    print(f"Cutting with size 3 ({size3})")
+
     # Calculate the number of cubes in each dimension
     cube_size = size3
     num_cubes_x = int(np.ceil((max_x - min_x) / cube_size))
     num_cubes_y = int(np.ceil((max_y - min_y) / cube_size))
     num_cubes_z = int(np.ceil((max_z - min_z) / cube_size))
 
+    print(f"Total number cubes: {num_cubes_x} (x) * {num_cubes_y} (y) * {num_cubes_z} (z) = {num_cubes_x*num_cubes_y*num_cubes_z}")
+
     # Iterate over the cubes and save the points in each non-empty cube as a separate .xyz file
     for i in range(num_cubes_x):
+        print(f" {i} / {num_cubes_x} (x)")
         for j in range(num_cubes_y):
             for k in range(num_cubes_z):
                 # Define the cube boundaries
@@ -202,14 +216,19 @@ def cut_point_cloud(point_cloud, outpath, size1, size2, size3, size4):
     min_z = np.min(point_cloud[:, 2]) - 0.3
     max_z = np.max(point_cloud[:, 2]) - 0.3
 
+    print(f"Cutting with size 4 ({size4})")
+
     # Calculate the number of cubes in each dimension
     cube_size = size4
     num_cubes_x = int(np.ceil((max_x - min_x) / cube_size))
     num_cubes_y = int(np.ceil((max_y - min_y) / cube_size))
     num_cubes_z = int(np.ceil((max_z - min_z) / cube_size))
+    
+    print(f"Total number cubes: {num_cubes_x} (x) * {num_cubes_y} (y) * {num_cubes_z} (z) = {num_cubes_x*num_cubes_y*num_cubes_z}")
 
     # Iterate over the cubes and save the points in each non-empty cube as a separate .xyz file
     for i in range(num_cubes_x):
+        print(f" {i} / {num_cubes_x} (x)")
         for j in range(num_cubes_y):
             for k in range(num_cubes_z):
                 # Define the cube boundaries

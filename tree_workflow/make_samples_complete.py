@@ -15,7 +15,6 @@ import random
 import pandas as pd
 import sys
 #from sklearn.model_selection import train_test_split
-/
 
 def bounding_box(points, min_x=-np.inf, max_x=np.inf, min_y=-np.inf,
                         max_y=np.inf, min_z=-np.inf, max_z=np.inf):
@@ -293,12 +292,12 @@ def train_test_txt(path_samples, outpath, test_trees = True):
 
         file = open(outpath+'test.txt','w')
         for item in test.filename:
-         	file.write(os.path.basename(item)+"\n")
+            file.write(os.path.basename(item)+"\n")
         file.close()
     
         file = open(outpath+'train.txt','w')
         for item in train.filename:
-         	file.write(os.path.basename(item)+"\n")
+            file.write(os.path.basename(item)+"\n")
         file.close()
     
     if not test_trees:
@@ -307,12 +306,12 @@ def train_test_txt(path_samples, outpath, test_trees = True):
         
         file = open(outpath+'test.txt','w')
         for item in test:
-         	file.write(os.path.basename(item)+"\n")
+            file.write(os.path.basename(item)+"\n")
         file.close()
     
         file = open(outpath+'train.txt','w')
         for item in train:
-         	file.write(os.path.basename(item)+"\n")
+            file.write(os.path.basename(item)+"\n")
         file.close()
         
         # split the list of object ids

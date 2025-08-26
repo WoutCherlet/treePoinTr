@@ -74,7 +74,7 @@ def inference_single(model, pc_path, args, config, root=None):
     transform = Compose([{
         'callback': 'UpSamplePoints',
         'parameters': {
-            'n_points': 2048 # tried changing to: 4048
+            'n_points': 2048
         },
         'objects': ['input']
     }, {
@@ -97,8 +97,7 @@ def inference_single(model, pc_path, args, config, root=None):
         target_path = os.path.join(args.out_pc_root, os.path.splitext(pc_path)[0])
         os.makedirs(target_path, exist_ok=True)
 
-        #np.save(os.path.join(target_path, 'fine.npy'), dense_points)
-        #np.savetxt(os.path.join(args.out_pc_root, os.path.splitext(pc_path)[0] + '_normed.xyz'), pc_ndarray, fmt="%.6f", delimiter=' ')
+        np.save(os.path.join(target_path, 'fine.npy'), dense_points)
         
         if args.save_xyz:
            np.savetxt(os.path.join(args.out_pc_root, os.path.splitext(pc_path)[0] + '_pred.xyz'), dense_points, fmt="%.6f", delimiter=' ') 
