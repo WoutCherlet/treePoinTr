@@ -6,7 +6,6 @@ from util import read_pc_np
 from evaluate_completion import compute_chamfer
 
 
-
 def main():
     base_dir = "/Stor1/wout/OcclusionPaper/data_treepointr_test"
     file_gt = os.path.join(base_dir, "input", "ABI_2t_1cm_SOR_6_10.txt")
@@ -37,7 +36,7 @@ def main():
     pc_completed.point.positions = o3d.core.Tensor(points_completed_merged)
 
     # SOR filter
-    pc_completed_filtered = pc_completed.remove_statistical_outliers(nb_neighbours=6, std_ratio=2)
+    pc_completed_filtered, _ = pc_completed.remove_statistical_outliers(nb_neighbors=6, std_ratio=2)
 
     # then voxel downsample to 1 cm
     pc_completed_f_ds = pc_completed_filtered.voxel_down_sample(voxel_size=0.01)
