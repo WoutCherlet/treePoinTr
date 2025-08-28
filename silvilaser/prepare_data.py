@@ -66,7 +66,7 @@ def normalize_block(points):
     points = points / scale
     return points, centroid, scale
 
-def get_cubes(pc_partial, pc_complete, inner_size, outer_size, odir, n_points_in = 2048, n_points_out = 4096):
+def get_cubes_naive(pc_partial, pc_complete, inner_size, outer_size, odir, n_points_in = 2048, n_points_out = 4096):
     '''
     Voxelize the partial and complete point clouds
 
@@ -118,7 +118,7 @@ def get_cubes(pc_partial, pc_complete, inner_size, outer_size, odir, n_points_in
         for j,y in enumerate(ys):
             for k,z in enumerate(zs):
                 # get poins in block only in complete and not in partial
-                start_time = timeit.default_timer()
+                # start_time = timeit.default_timer()
                 mask_to_complete = (
                     (points_to_complete[:, 0] >= x) & (points_to_complete[:, 0] < x + outer_size) &
                     (points_to_complete[:, 1] >= y) & (points_to_complete[:, 1] < y + outer_size) &
@@ -138,61 +138,172 @@ def get_cubes(pc_partial, pc_complete, inner_size, outer_size, odir, n_points_in
                     continue
                 # partial + to_complete = complete, avoids another masking operation
                 block_pts_complete = np.vstack((block_pts_partial, block_pts_to_complete))
-                elapsed = timeit.default_timer() - start_time
-                print(f"Time to filter points: {elapsed}")
+                # elapsed = timeit.default_timer() - start_time
+                # print(f"Time to filter points: {elapsed}")
 
-                # TODO: TEMP: save as ply to inspect
-                mask_complete_orig = (
-                    (points_complete[:, 0] >= x) & (points_complete[:, 0] < x + outer_size) &
-                    (points_complete[:, 1] >= y) & (points_complete[:, 1] < y + outer_size) &
-                    (points_complete[:, 2] >= z) & (points_complete[:, 2] < z + outer_size)
-                )
-                block_pts_complete_orig = points_complete[mask_complete_orig]
                 write_points_np(block_pts_partial, os.path.join(odir, "debug", f"orig_block_partial_{i:03d}_{j:03d}_{k:03d}.ply"))
                 write_points_np(block_pts_complete, os.path.join(odir, "debug", f"orig_block_complete_{i:03d}_{j:03d}_{k:03d}.ply"))
-                write_points_np(block_pts_complete_orig, os.path.join(odir, "debug", f"orig_block_complete_orig_{i:03d}_{j:03d}_{k:03d}.ply"))
 
-                start_time = timeit.default_timer()
+                # start_time = timeit.default_timer()
 
                 # pad or sample to get constant output points
-                if len(block_pts_complete) < n_points_out:
-                    block_pts_complete = pad_points(block_pts_complete, n_points_out)
-                elif len(block_pts_complete) > n_points_out:
-                    block_pts_complete = farthest_point_sampling(block_pts_complete, n_points_out)
+                # if len(block_pts_complete) < n_points_out:
+                #     block_pts_complete = pad_points(block_pts_complete, n_points_out)
+                # elif len(block_pts_complete) > n_points_out:
+                #     block_pts_complete = farthest_point_sampling(block_pts_complete, n_points_out)
 
-                # pad or sample to get constant input points
-                if len(block_pts_partial) < n_points_in:
-                    block_pts_partial = pad_points(block_pts_partial, n_points_in)
-                elif len(block_pts_partial) > n_points_in:
-                    block_pts_partial = farthest_point_sampling(block_pts_partial, n_points_in)
+                # # pad or sample to get constant input points
+                # if len(block_pts_partial) < n_points_in:
+                #     block_pts_partial = pad_points(block_pts_partial, n_points_in)
+                # elif len(block_pts_partial) > n_points_in:
+                #     block_pts_partial = farthest_point_sampling(block_pts_partial, n_points_in)
 
-                elapsed = timeit.default_timer() - start_time
-                print(f"Time to pad/sample points: {elapsed}")
+                # elapsed = timeit.default_timer() - start_time
+                # print(f"Time to pad/sample points: {elapsed}")
 
-                # normalize
-                start_time = timeit.default_timer()
-                block_pts_partial, centroid, scale = normalize_block(block_pts_partial)
-                block_pts_complete = (block_pts_complete - centroid) / scale
-                elapsed = timeit.default_timer() - start_time
-                print(f"Time to normalize points: {elapsed}")
+                # # normalize
+                # start_time = timeit.default_timer()
+                # block_pts_partial, centroid, scale = normalize_block(block_pts_partial)
+                # block_pts_complete = (block_pts_complete - centroid) / scale
+                # elapsed = timeit.default_timer() - start_time
+                # print(f"Time to normalize points: {elapsed}")
 
                 # Save
-                start_time = timeit.default_timer()
-                np.savez(os.path.join(odir, "blocks", f"block_{x:03d}_{y:03d}_{z:03d}.npz"),
+                # start_time = timeit.default_timer()
+                # np.savez(os.path.join(odir, "blocks", f"block_{x:03d}_{y:03d}_{z:03d}.npz"),
+                #         partial=block_pts_partial.astype(np.float32),
+                #         complete=block_pts_complete.astype(np.float32),
+                #         origin=np.array([x,y,z]), centroid=centroid, scale=scale)
+
+                np.savez(os.path.join(odir, "blocks", f"block_{i:03d}_{j:03d}_{k:03d}.npz"),
                         partial=block_pts_partial.astype(np.float32),
                         complete=block_pts_complete.astype(np.float32),
-                        origin=np.array([x,y,z]), centroid=centroid, scale=scale)
+                        origin=np.array([x,y,z]))
                 
                 # TODO: TEMP: save as ply to inspect
-                write_points_np(block_pts_partial, os.path.join(odir, "debug", f"block_partial_{i:03d}_{j:03d}_{k:03d}.ply"))
-                write_points_np(block_pts_complete, os.path.join(odir, "debug", f"block_complete_{i:03d}_{j:03d}_{k:03d}.ply"))
-                elapsed = timeit.default_timer() - start_time
-                print(f"Time to save points: {elapsed}")
-
-                # TODO: TEMP: single block
-                return
+                # write_points_np(block_pts_partial, os.path.join(odir, "debug", f"block_partial_{i:03d}_{j:03d}_{k:03d}.ply"))
+                # write_points_np(block_pts_complete, os.path.join(odir, "debug", f"block_complete_{i:03d}_{j:03d}_{k:03d}.ply"))
+                # elapsed = timeit.default_timer() - start_time
+                # print(f"Time to save points: {elapsed}")
 
     return
+
+
+def assign_blocks(points_partial, points_to_complete, min_bound, max_bound, inner_size, outer_size):
+    N_partial = points_partial.shape[0]
+    N_to_complete = points_to_complete.shape[0]
+    stride = inner_size
+
+    xmin, ymin, zmin = min_bound
+    xmax, ymax, zmax = max_bound
+
+    # Normalize coordinates so xmin,ymin,zmin -> 0
+    coords_to_complete = points_to_complete - np.array([xmin, ymin, zmin])
+    coords_partial = points_partial - np.array([xmin, ymin, zmin])
+
+    # Precompute block grid extents
+    nx = int(np.ceil((xmax - xmin) / stride))
+    ny = int(np.ceil((ymax - ymin) / stride))
+    nz = int(np.ceil((zmax - zmin) / stride))
+
+    block_map_to_complete = {}
+
+    for i in range(N_to_complete):
+        x, y, z = coords_to_complete[i]
+
+        # Ranges of valid k for each axis
+        kx_min = max(0, int(np.floor((x - outer_size)) / stride) + 1)
+        kx_max = min(nx-1, int(np.floor(x / stride)))
+        ky_min = max(0, int(np.floor((y - outer_size) / stride)) + 1)
+        ky_max = min(ny-1, int(np.floor(y / stride)))
+        kz_min = max(0, int(np.floor((z - outer_size) / stride)) + 1)
+        kz_max = min(nz-1, int(np.floor(z / stride)))
+
+        # Cartesian product of valid block indices
+        for kx, ky, kz in product(range(kx_min, kx_max+1),
+                                  range(ky_min, ky_max+1),
+                                  range(kz_min, kz_max+1)):
+            block_map_to_complete.setdefault((kx, ky, kz), []).append(i)
+
+    block_map_partial = {}
+    for i in range(N_partial):
+        x, y, z = coords_partial[i]
+
+        # Ranges of valid k for each axis
+        kx_min = max(0, int(np.floor((x - outer_size)) / stride) + 1)
+        kx_max = min(nx-1, int(np.floor(x / stride)))
+        ky_min = max(0, int(np.floor((y - outer_size) / stride)) + 1)
+        ky_max = min(ny-1, int(np.floor(y / stride)))
+        kz_min = max(0, int(np.floor((z - outer_size) / stride)) + 1)
+        kz_max = min(nz-1, int(np.floor(z / stride)))
+
+        # Cartesian product of valid block indices
+        for kx, ky, kz in product(range(kx_min, kx_max+1),
+                                  range(ky_min, ky_max+1),
+                                  range(kz_min, kz_max+1)):
+            block_map_partial.setdefault((kx, ky, kz), []).append(i)
+
+
+    return block_map_partial, block_map_to_complete
+
+def get_cubes_fast(pc_partial, pc_complete, inner_size, outer_size, odir, n_points_in = 2048, n_points_out = 4096):
+    '''
+    Voxelize the partial and complete point clouds
+
+    Outer size is total voxel size, inner size is where predictions will be kept. So stride is inner size so predictions are made everywhere
+
+    n_points_in and n_points_out should be constant for poinTr input and output
+    '''
+
+    # minimum amount of points that should be in complete point cloud but not in partial
+    MIN_POINTS_TO_COMPLETE = 1024
+    # minimum amount of points that should be in partial point cloud
+    MIN_POINTS_PARTIAL = 1024
+
+    os.makedirs(odir, exist_ok=True)
+    os.makedirs(os.path.join(odir, "blocks"), exist_ok=True)
+    # TODO: TEMP
+    os.makedirs(os.path.join(odir, "debug"), exist_ok=True)
+
+    # get pc of points only present in complete and not in partial
+    pc_to_complete = get_to_complete_pc(pc_partial, pc_complete)
+
+    points_complete = pc_complete.point.positions.numpy()
+    points_to_complete = pc_to_complete.point.positions.numpy()
+    points_partial = pc_partial.point.positions.numpy()
+
+    # outer_size is entire voxel, inner_size is where predictions are kept. So we want stride to be inner_size, so we do predictions everywhere
+    stride = inner_size
+    diff = outer_size - inner_size
+
+    min_bound = np.min(points_complete, axis=0) - [diff, diff,diff]
+    max_bound = np.max(points_complete, axis=0) - [diff, diff,diff]
+
+    block_map_partial, block_map_to_complete = assign_blocks(points_partial, points_to_complete, min_bound, max_bound, inner_size, outer_size)
+
+    for vox_idx in block_map_partial:
+
+        if vox_idx not in block_map_to_complete or len(block_map_to_complete[vox_idx]) < MIN_POINTS_TO_COMPLETE:
+            continue
+
+        if len(block_map_partial[vox_idx]) < MIN_POINTS_PARTIAL:
+            continue
+
+        origin = min_bound + vox_idx*stride
+        block_pts_partial = points_partial[block_map_partial[vox_idx]]
+        block_pts_to_complete = points_to_complete[block_map_to_complete [vox_idx]]
+        block_pts_complete = np.vstack((block_pts_partial, block_pts_to_complete))
+        i,j,k = vox_idx
+        write_points_np(block_pts_partial, os.path.join(odir, "debug", f"orig_block_partial_{i:03d}_{j:03d}_{k:03d}.ply"))
+        write_points_np(block_pts_complete, os.path.join(odir, "debug", f"orig_block_complete_{i:03d}_{j:03d}_{k:03d}.ply"))
+
+        np.savez(os.path.join(odir, "blocks", f"block_{i:03d}_{j:03d}_{k:03d}.npz"),
+                partial=block_pts_partial.astype(np.float32),
+                complete=block_pts_complete.astype(np.float32),
+                origin=origin)
+                
+    return
+
 
 def main():
 

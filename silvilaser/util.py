@@ -52,9 +52,9 @@ def write_points_np(points, ofile):
     if extension not in extensions:
         print(f"Warning: extensions {extensions} not in supported extensions {extensions}")
 
-    if extension == ".ply":
+    if extension == "ply":
         pc = o3d.t.geometry.PointCloud()
-        pc.point.positions = points
+        pc.point.positions = o3d.core.Tensor(points)
 
         o3d.t.io.write_point_cloud(ofile, pc)
     elif extension == "xyz" or extension == "txt":

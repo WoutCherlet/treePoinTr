@@ -1,21 +1,23 @@
 import os
 import numpy as np
+import open3d as o3d
 import timeit
 from itertools import product
 
-from prepare_data import get_to_complete_pc
+from util import read_pc_o3d
+from prepare_data import get_to_complete_pc, get_cubes_naive, get_cubes_fast
 
-def assign_blocks(points_partial, points_complete, inner_size, outer_size):
+def assign_blocks(points_partial, points_to_complete, min_bound, max_bound, inner_size, outer_size):
     N_partial = points_partial.shape[0]
-    N_complete = points_complete.shape[0]
+    N_to_complete = points_to_complete.shape[0]
     stride = inner_size
     diff = outer_size - inner_size
 
-    xmin, ymin, zmin = points_complete.min(axis=0) - [diff, diff, diff]
-    xmax, ymax, zmax = points_complete.max(axis=0) - [diff, diff, diff]
+    xmin, ymin, zmin = min_bound
+    xmax, ymax, zmax = max_bound
 
     # Normalize coordinates so xmin,ymin,zmin -> 0
-    coords_complete = points_complete - np.array([xmin, ymin, zmin])
+    coords_to_complete = points_to_complete - np.array([xmin, ymin, zmin])
     coords_partial = points_partial - np.array([xmin, ymin, zmin])
 
     # Precompute block grid extents
@@ -23,10 +25,10 @@ def assign_blocks(points_partial, points_complete, inner_size, outer_size):
     ny = int(np.ceil((ymax - ymin - outer_size) / stride)) + 1
     nz = int(np.ceil((zmax - zmin - outer_size) / stride)) + 1
 
-    block_map_complete = {}
+    block_map_to_complete = {}
 
-    for i in range(N_complete):
-        x, y, z = coords_complete[i]
+    for i in range(N_to_complete):
+        x, y, z = coords_to_complete[i]
 
         # Ranges of valid k for each axis
         kx_min = max(0, int(np.floor((x - outer_size)) / stride) + 1)
@@ -40,7 +42,7 @@ def assign_blocks(points_partial, points_complete, inner_size, outer_size):
         for kx, ky, kz in product(range(kx_min, kx_max+1),
                                   range(ky_min, ky_max+1),
                                   range(kz_min, kz_max+1)):
-            block_map_complete.setdefault((kx, ky, kz), []).append(i)
+            block_map_to_complete.setdefault((kx, ky, kz), []).append(i)
 
     block_map_partial = {}
     for i in range(N_partial):
@@ -61,7 +63,7 @@ def assign_blocks(points_partial, points_complete, inner_size, outer_size):
             block_map_partial.setdefault((kx, ky, kz), []).append(i)
 
 
-    return block_map_partial, block_map_complete
+    return block_map_partial, block_map_to_complete
 
 def benchmark_selection(pc_partial, pc_complete, inner_size, outer_size):
     pc_to_complete = get_to_complete_pc(pc_partial, pc_complete)
@@ -174,3 +176,42 @@ def benchmark_selection(pc_partial, pc_complete, inner_size, outer_size):
 
     return
 
+
+def main():
+
+    file_occl = "/Stor1/wout/OcclusionPaper/data_treepointr_test/input/ABI_ground_1cm_SOR_6_10.txt"
+    file_compl = "/Stor1/wout/OcclusionPaper/data_treepointr_test/input/ABI_2t_1cm_SOR_6_10.txt"
+
+    pc_occl = read_pc_o3d(file_occl, delimiter=",")
+    pc_compl = read_pc_o3d(file_compl, delimiter=",")
+
+    odir = "/Stor1/wout/OcclusionPaper/data_treepointr_test/ABI_processing/test_get_cubes_naive"
+
+    min_b = [-20.0, -10.0, 420.0]
+    max_b = [0.0, 5.0, 435.0]
+    test_bbox = o3d.t.geometry.AxisAlignedBoundingBox(min_bound=min_b, max_bound=max_b)
+
+    part_occl = pc_occl.crop(test_bbox)
+    part_compl = pc_compl.crop(test_bbox)
+
+    start_time = timeit.default_timer()
+
+    # get_cubes_naive(part_occl, part_compl, inner_size=1, outer_size=2, odir=odir)
+    get_cubes_naive(part_occl, part_compl, inner_size=1, outer_size=2, odir=odir)
+
+    elapsed = timeit.default_timer() - start_time
+    print(f"Time for get_cubes_naive: {elapsed}")
+
+    odir = "/Stor1/wout/OcclusionPaper/data_treepointr_test/ABI_processing/test_get_cubes_fast"
+
+    start_time = timeit.default_timer()
+
+    # get_cubes_naive(part_occl, part_compl, inner_size=1, outer_size=2, odir=odir)
+    get_cubes_fast(part_occl, part_compl, inner_size=1, outer_size=2, odir=odir)
+
+    elapsed = timeit.default_timer() - start_time
+    print(f"Time for get_cubes_fast: {elapsed}")
+
+
+if __name__ == "__main__":
+    main()
