@@ -237,17 +237,16 @@ def main():
     inner_size = 1
     outer_size = 2
 
-    print(pc_compl.get_min_bound())
-    print(pc_compl.get_max_bound())
+    # print(pc_compl.get_min_bound())
+    # print(pc_compl.get_max_bound())
 
-    # get_cubes(pc_occl, pc_compl, inner_size, outer_size, odir)
+    get_cubes(pc_occl, pc_compl, inner_size, outer_size, odir)
 
     # leftover_pc = get_non_occluded_pc(pc_occl, pc_compl)
 
     # ofile = "/Stor1/wout/OcclusionPaper/data_treepointr_test/input/processed/ABI_CLS_only.ply"
 
     # o3d.t.io.write_point_cloud(ofile, leftover_pc)
-
 
 
 if __name__ == "__main__":

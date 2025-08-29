@@ -1,6 +1,0 @@
-nohup: ignoring input
-/home/wcherlet/miniconda3/envs/PoinTr/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
-  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
-2025-06-12 10:51:17,512 - MODEL - INFO -  Transformer with knn_layer 1
-Loading weights from ckpts/treepointr/real/ckpt-best.pth...
-ckpts @ 111 epoch( performance = {'F-Score': 0.25894601255137034, 'CDL1': 24.85050698167365, 'CDL2': 3.445484180514477, 'EMDistance': 0.0})
