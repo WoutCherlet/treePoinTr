@@ -5,7 +5,7 @@ import timeit
 from itertools import product
 
 from util import read_pc_o3d
-from prepare_data import get_to_complete_pc, get_cubes_naive, get_cubes_fast
+from prepare_data import get_to_complete_pc, get_cubes
 
 def assign_blocks(points_partial, points_to_complete, min_bound, max_bound, inner_size, outer_size):
     N_partial = points_partial.shape[0]
@@ -177,6 +177,14 @@ def benchmark_selection(pc_partial, pc_complete, inner_size, outer_size):
     return
 
 
+def read_npz(npz_file):
+
+    data = np.load(npz_file)
+
+    for f in data.files:
+        print(data[f])
+
+
 def main():
 
     file_occl = "/Stor1/wout/OcclusionPaper/data_treepointr_test/input/ABI_ground_1cm_SOR_6_10.txt"
@@ -187,30 +195,27 @@ def main():
 
     odir = "/Stor1/wout/OcclusionPaper/data_treepointr_test/ABI_processing/test_get_cubes_naive"
 
-    min_b = [-20.0, -10.0, 420.0]
-    max_b = [0.0, 5.0, 435.0]
+    min_b = [-5.0, -5.0, 420.0]
+    max_b = [0.0, 0.0, 435.0]
     test_bbox = o3d.t.geometry.AxisAlignedBoundingBox(min_bound=min_b, max_bound=max_b)
 
     part_occl = pc_occl.crop(test_bbox)
     part_compl = pc_compl.crop(test_bbox)
 
-    start_time = timeit.default_timer()
-
-    # get_cubes_naive(part_occl, part_compl, inner_size=1, outer_size=2, odir=odir)
-    get_cubes_naive(part_occl, part_compl, inner_size=1, outer_size=2, odir=odir)
-
-    elapsed = timeit.default_timer() - start_time
-    print(f"Time for get_cubes_naive: {elapsed}")
-
-    odir = "/Stor1/wout/OcclusionPaper/data_treepointr_test/ABI_processing/test_get_cubes_fast"
+    odir = "/Stor1/wout/OcclusionPaper/data_treepointr_test/ABI_processing/test_get_cubes"
 
     start_time = timeit.default_timer()
 
-    # get_cubes_naive(part_occl, part_compl, inner_size=1, outer_size=2, odir=odir)
-    get_cubes_fast(part_occl, part_compl, inner_size=1, outer_size=2, odir=odir)
+    get_cubes(part_occl, part_compl, inner_size=1, outer_size=2, odir=odir)
 
     elapsed = timeit.default_timer() - start_time
     print(f"Time for get_cubes_fast: {elapsed}")
+
+    # test_cube_naive = "/Stor1/wout/OcclusionPaper/data_treepointr_test/ABI_processing/test_get_cubes_naive/blocks/block_000_008_003.npz"
+    # read_npz(test_cube_naive)
+
+    # test_cube_fast = "/Stor1/wout/OcclusionPaper/data_treepointr_test/ABI_processing/test_get_cubes_fast/blocks/block_000_008_003.npz"
+    # read_npz(test_cube_fast)
 
 
 if __name__ == "__main__":
