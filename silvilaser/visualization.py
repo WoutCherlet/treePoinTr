@@ -226,9 +226,11 @@ def render_onscreen_test():
     # onscreen app
     app = o3d.visualization.gui.Application.instance
     app.initialize()
-    window = app.create_window("Cube Viewer", 1024, 768)
-    scene = window.scene
-    scene.set_background([1, 1, 1, 1])
+    window = app.create_window("Cube Viewer", 1024, 768)     
+    scene_widget = o3d.visualization.gui.SceneWidget()
+    scene_widget.scene = o3d.visualization.rendering.Open3DScene(window.renderer)
+    window.add_child(scene_widget)
+    scene_widget.scene.set_background([1, 1, 1, 1])
 
     aabbs = []
     for i in range(100):
@@ -243,19 +245,46 @@ def render_onscreen_test():
     mat.shader = "defaultLitTransparency"
     mat.base_color = [1.0, 0.0, 0.0, 0.5]
 
-    scene.add_geometry("boxes", mesh, mat)
+    scene_widget.scene.add_geometry("boxes", mesh, mat)
 
     # setup camera
     bbox = o3d.geometry.AxisAlignedBoundingBox.create_from_points(
         o3d.utility.Vector3dVector(np.vstack([g.get_axis_aligned_bounding_box().get_box_points()
                                                 for g in aabbs]))
     )
-    distance_factor = 1.0
-    extent = np.linalg.norm(bbox.get_extent())
-    eye = bbox.get_center() + distance_factor * extent * np.array([1.0, 1.0, 1.0])
-    scene.camera.look_at(bbox.get_center(), eye, np.array([0, 0, 1]))
+    # distance_factor = 1.0
+    # extent = np.linalg.norm(bbox.get_extent())
+    # eye = bbox.get_center() + distance_factor * extent * np.array([1.0, 1.0, 1.0])
+    # scene.camera.look_at(bbox.get_center(), eye, np.array([0, 0, 1]))
+    scene_widget.setup_camera(60, bbox, bbox.get_center())
 
     app.run()
+
+def render_onscreen_test_manual():
+
+    aabbs = []
+    for i in range(100):
+        min_bound = np.random.rand(3) * 10
+        max_bound = min_bound + [1.0, 1.0, 1.0]
+        aabbs.append(o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound))
+
+    mesh = batch_aabbs_to_mesh(aabbs)
+    mesh.compute_vertex_normals()
+
+    mat = o3d.visualization.rendering.MaterialRecord()
+    mat.shader = "defaultLitTransparency"
+    mat.base_color = [1.0, 0.0, 0.0, 0.5]
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    vis.add_geometry(mesh)
+
+    vis.run()
+    vis.destroy_window()
+
+    return
+
 
 def main():
 
