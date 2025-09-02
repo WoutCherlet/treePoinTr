@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import open3d as o3d
+import laspy
 
 def read_pc_o3d(file, delimiter=" "):
     extension = file[-4:]
@@ -15,6 +16,11 @@ def read_pc_o3d(file, delimiter=" "):
             print(f"WARNING: file {file} does not contain 3 columns, using first 3 columns")
             points = points[:,:3]
         
+        pc = o3d.t.geometry.PointCloud()
+        pc.point.positions = o3d.core.Tensor(points)
+    elif extension == ".las":
+        las = laspy.read(file)
+        points = np.vstack((las.x, las.y, las.z)).transpose()
         pc = o3d.t.geometry.PointCloud()
         pc.point.positions = o3d.core.Tensor(points)
     else:
@@ -36,6 +42,9 @@ def read_pc_np(file, delimiter=" "):
         if not points.shape[-1] == 3:
             print(f"WARNING: file {file} does not contain 3 columns, using first 3 columns")
             points = points[:,:3]
+    elif extension == ".las":
+        las = laspy.read(file)
+        points = np.vstack((las.x, las.y, las.z)).transpose()
     else:
         print(f"WARNING: extension {extension} not supported")
         os._exit(1)
