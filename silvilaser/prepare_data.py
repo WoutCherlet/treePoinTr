@@ -2,6 +2,7 @@ import os
 import random
 import numpy as np
 import open3d as o3d
+import glob
 
 import timeit
 from itertools import product
@@ -122,7 +123,7 @@ def normalize_block(points):
     points = points / scale
     return points, centroid, scale
 
-def get_cubes(pc_partial, pc_complete, inner_size, outer_size, odir, n_points_in = 2048, n_points_out = 4096):
+def get_cubes(pc_partial, pc_complete, inner_size, outer_size, odir, n_points_in = 2048, n_points_out = 4096, debug=False):
     '''
     Voxelize the partial and complete point clouds
 
@@ -138,8 +139,8 @@ def get_cubes(pc_partial, pc_complete, inner_size, outer_size, odir, n_points_in
 
     os.makedirs(odir, exist_ok=True)
     os.makedirs(os.path.join(odir, "blocks"), exist_ok=True)
-    # TODO: TEMP
-    os.makedirs(os.path.join(odir, "debug"), exist_ok=True)
+    if debug:
+        os.makedirs(os.path.join(odir, "debug"), exist_ok=True)
 
     # get pc of points only present in complete and not in partial
     pc_to_complete = get_to_complete_pc(pc_partial, pc_complete)
@@ -188,14 +189,10 @@ def get_cubes(pc_partial, pc_complete, inner_size, outer_size, odir, n_points_in
         i,j,k = vox_idx
 
         # TEMP DEBUG
-        write_points_np(block_pts_partial, os.path.join(odir, "debug", f"orig_block_partial_{i:03d}_{j:03d}_{k:03d}.ply"))
-        write_points_np(block_pts_complete, os.path.join(odir, "debug", f"orig_block_complete_{i:03d}_{j:03d}_{k:03d}.ply"))
+        if debug:
+            write_points_np(block_pts_partial, os.path.join(odir, "debug", f"orig_block_partial_{i:03d}_{j:03d}_{k:03d}.ply"))
+            write_points_np(block_pts_complete, os.path.join(odir, "debug", f"orig_block_complete_{i:03d}_{j:03d}_{k:03d}.ply"))
 
-        np.savez(os.path.join(odir, "blocks", f"block_{i:03d}_{j:03d}_{k:03d}.npz"),
-                partial=block_pts_partial.astype(np.float32),
-                complete=block_pts_complete.astype(np.float32),
-                origin=origin)
-        
         # pad or sample to get constant output points
         if len(block_pts_complete) < n_points_out:
             block_pts_complete = pad_points(block_pts_complete, n_points_out)
@@ -217,36 +214,68 @@ def get_cubes(pc_partial, pc_complete, inner_size, outer_size, odir, n_points_in
                 complete=block_pts_complete.astype(np.float32),
                 origin=origin, centroid=centroid, scale=scale)
         
-        # TODO: TEMP: save as ply to inspect
-        write_points_np(block_pts_partial, os.path.join(odir, "debug", f"block_partial_{i:03d}_{j:03d}_{k:03d}.ply"))
-        write_points_np(block_pts_complete, os.path.join(odir, "debug", f"block_complete_{i:03d}_{j:03d}_{k:03d}.ply"))
+        if debug:
+            write_points_np(block_pts_partial, os.path.join(odir, "debug", f"block_partial_{i:03d}_{j:03d}_{k:03d}.ply"))
+            write_points_np(block_pts_complete, os.path.join(odir, "debug", f"block_complete_{i:03d}_{j:03d}_{k:03d}.ply"))
                 
     return
 
 
+def get_train_test_txt(train_dirs, test_dirs, odir, val_frac=0.2):
+    # get all training blocks
+    all_blocks = []
+    for dir in train_dirs:
+        blocks = [f"{os.path.basename(os.path.dirname(dir))}_{os.path.basename(bl)}" for bl in glob.glob(os.path.join(dir, "blocks", "*.npz"))]
+        all_blocks += blocks
+
+    all_blocks = np.asarray(all_blocks)
+    # take frac for val
+    n_total = len(all_blocks)
+    n_split = int(round(val_frac * n_total))
+    perm = np.random.permutation(n_total)
+
+    train_blocks = all_blocks[perm[n_split:]]
+    val_blocks = all_blocks[perm[:n_split]]
+
+    test_blocks = []
+    for dir in test_dirs:
+        blocks = [f"{os.path.basename(os.path.dirname(dir))}_{os.path.basename(bl)}" for bl in glob.glob(os.path.join(dir, "blocks", "*.npz"))]
+        test_blocks += blocks
+
+    train_file = os.path.join(odir, "train.txt")
+    val_file = os.path.join(odir, "val.txt")
+    test_file = os.path.join(odir, "test.txt")
+
+    with open(train_file, "w") as f:
+        f.write("\n".join(train_blocks))
+    with open(val_file, "w") as f:
+        f.write("\n".join(val_blocks))
+    with open(test_file, "w") as f:
+        f.write("\n".join(test_blocks))
+    return
+
+
+
 def main():
 
-    file_occl = "/Stor1/wout/OcclusionPaper/data_treepointr_test/input/ABI_ground_1cm_SOR_6_10.txt"
-    file_compl = "/Stor1/wout/OcclusionPaper/data_treepointr_test/input/ABI_2t_1cm_SOR_6_10.txt"
+    # file_occl = "/Stor1/wout/OcclusionPaper/data_barbara/tree_pointclouds/pc_COL_tls_1cm_SOR_6_10.las"
+    # file_compl = "/Stor1/wout/OcclusionPaper/data_barbara/tree_pointclouds/pc_COL_tlscls_1cm_SOR_6_10.las"
 
-    pc_occl = read_pc_o3d(file_occl, delimiter=",")
-    pc_compl = read_pc_o3d(file_compl, delimiter=",")
+    # pc_occl = read_pc_o3d(file_occl)
+    # pc_compl = read_pc_o3d(file_compl)
 
-    odir = "/Stor1/wout/OcclusionPaper/data_treepointr_test/ABI_processing"
+    # odir = "/Stor1/wout/OcclusionPaper/data_treepointr_test/CLS_experiments/COL_processed"
 
-    inner_size = 1
-    outer_size = 2
+    # inner_size = 1
+    # outer_size = 2
 
-    # print(pc_compl.get_min_bound())
-    # print(pc_compl.get_max_bound())
+    # get_cubes(pc_occl, pc_compl, inner_size, outer_size, odir)
 
-    get_cubes(pc_occl, pc_compl, inner_size, outer_size, odir)
+    train_dirs = ["/Stor1/wout/OcclusionPaper/CLS_experiment/all_cubes/PER1/", "/Stor1/wout/OcclusionPaper/CLS_experiment/all_cubes/COL/"]
+    test_dirs = ["/Stor1/wout/OcclusionPaper/CLS_experiment/all_cubes/PER2/"]
+    odir = "/home/wcherlet/occlusion/treePoinTr/data/CLS"
 
-    # leftover_pc = get_non_occluded_pc(pc_occl, pc_compl)
-
-    # ofile = "/Stor1/wout/OcclusionPaper/data_treepointr_test/input/processed/ABI_CLS_only.ply"
-
-    # o3d.t.io.write_point_cloud(ofile, leftover_pc)
+    get_train_test_txt(train_dirs, test_dirs, odir)
 
 
 if __name__ == "__main__":

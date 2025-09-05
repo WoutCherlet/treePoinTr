@@ -1,0 +1,4 @@
+NAME: CLS
+DATA_FOLDER: data/CLS/ 
+N_POINTS: 4096
+PC_PATH: /Stor1/wout/OcclusionPaper/CLS_experiment/all_cubes/

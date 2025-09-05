@@ -102,69 +102,27 @@ def batch_aabbs_to_mesh(aabbs: list[o3d.geometry.AxisAlignedBoundingBox]):
     return mesh
 
 def aabb_to_lineset(aabb):
-    corners = np.asarray(aabb.get_box_points())
-
-    # get lines
-    lines = np.array([
-        [0, 1], [1, 2], [2, 3], [3, 0],  # bottom face
-        [4, 5], [5, 6], [6, 7], [7, 4],  # top face
-        [0, 4], [1, 5], [2, 6], [3, 7],  # vertical edges
-    ])
-
-    colors = np.tile([1.0, 1.0, 1.0], (lines.shape[0], 1))
-
-    lineset = o3d.geometry.LineSet()
-    lineset.points = o3d.utility.Vector3dVector(corners)
-    lineset.lines = o3d.utility.Vector2iVector(lines)
-    lineset.colors = o3d.utility.Vector3dVector(colors)
-    return lineset
+    return o3d.geometry.LineSet.create_from_axis_aligned_bounding_box(aabb)
 
 def batch_aabbs_to_lineset(aabbs: list[o3d.geometry.AxisAlignedBoundingBox]):
-    """
-    Create a single LineSet containing many AABB wireframes.
+    ls = o3d.geometry.LineSet()
+    if not aabbs:
+        return ls
 
-    Parameters
-    ----------
-    aabbs : list of o3d.geometry.AxisAlignedBoundingBox
-        List of bounding boxes.
+    tmpl = o3d.geometry.LineSet.create_from_axis_aligned_bounding_box(aabbs[0])
+    E = np.asarray(tmpl.lines, dtype=np.int32)
 
-    Returns
-    -------
-    lineset : o3d.geometry.LineSet
-        Combined LineSet for all boxes.
-    """
-    all_points = []
-    all_lines = []
-    all_colors = []
+    all_pts, all_lines = [], []
     offset = 0
+    for bb in aabbs:
+        P = np.asarray(bb.get_box_points())
+        all_pts.append(P)
+        all_lines.append(E + offset)
+        offset += P.shape[0]  # += 8
 
-    # Each cube has the same edge structure
-    cube_edges = np.array([
-        [0, 1], [1, 2], [2, 3], [3, 0],  # bottom face
-        [4, 5], [5, 6], [6, 7], [7, 4],  # top face
-        [0, 4], [1, 5], [2, 6], [3, 7],  # vertical edges
-    ])
-
-    for aabb in aabbs:
-        corners = np.asarray(aabb.get_box_points())
-        all_points.append(corners)
-        all_lines.append(cube_edges + offset)
-        offset += corners.shape[0]
-
-        # give all edges same color (white), could also be random
-        all_colors.append(np.tile([1, 1, 1], (cube_edges.shape[0], 1)))
-
-    # Stack everything
-    all_points = np.vstack(all_points)
-    all_lines = np.vstack(all_lines)
-    all_colors = np.vstack(all_colors)
-
-    lineset = o3d.geometry.LineSet()
-    lineset.points = o3d.utility.Vector3dVector(all_points)
-    lineset.lines = o3d.utility.Vector2iVector(all_lines)
-    lineset.colors = o3d.utility.Vector3dVector(all_colors)
-
-    return lineset
+    ls.points = o3d.utility.Vector3dVector(np.vstack(all_pts))
+    ls.lines  = o3d.utility.Vector2iVector(np.vstack(all_lines))
+    return ls
 
 
 def setup_camera_for_aabbs(renderer: o3d.visualization.rendering.OffscreenRenderer,
