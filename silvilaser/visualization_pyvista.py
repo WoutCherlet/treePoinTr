@@ -106,56 +106,39 @@ def pyvista_bboxs_with_lines():
     plotter.show()
     
 
-HORIZONTAL_BUFFER = 10
-VERTICAL_BUFFER_BOTTOM = 5
-VERTICAL_BUFFER_TOP = 20
-VOX_DIM = 0.1
-
-def occmap_vis_pyvista(occmap_file, pointcloud_file):
+def occmap_vis_pyvista(occmap_file, pointcloud_file, settings_file):
     # read npy
     occmap = np.load(occmap_file)
-    # switch x and y
-    occmap = np.swapaxes(occmap, 0, 1)
     
+    # read occpy settings to align pointcloud and grid
+    settings = np.load(settings_file, allow_pickle=True)
+    min_occpy_grid = settings["min_bound"]
+    vox_dim = settings["vox_dim"]
+    h_buffer = settings["h_buffer"]
+    v_buffer_bottom = settings["v_buffer_bottom"]
+    v_buffer_top = settings["v_buffer_top"]
+        
     las = laspy.read(pointcloud_file)
     points = np.vstack((las.x, las.y, las.z)).transpose()
     min_pc = np.min(points, axis=0)
     max_pc = np.max(points, axis=0)
     
-    min_pc -= [HORIZONTAL_BUFFER, HORIZONTAL_BUFFER, VERTICAL_BUFFER_BOTTOM]
-    max_pc += [HORIZONTAL_BUFFER, HORIZONTAL_BUFFER, VERTICAL_BUFFER_TOP]
-    
-    print(min_pc)
-    print(max_pc)
+    min_pc -= [h_buffer, h_buffer, v_buffer_bottom]
+    max_pc += [h_buffer, h_buffer, v_buffer_top]
     
     vox_dim = 0.1
     
-    print((max_pc-min_pc)/vox_dim)
-    
-    dims = occmap.shape
-    
-    print(dims)
-    
-    crop_min = np.floor(np.divide(dims, 2)) - 40
-    crop_max = np.floor(np.divide(dims, 2)) + 30
-
-    crop_min = np.array([0, dims[1]/2-30, 50])
-    crop_max = np.array([dims[0], dims[1]/2, dims[2]-50])
+    crop_min = np.asarray([200, 150, 100])
+    crop_max = np.asarray([350, 300, 300])
     
     bboxs_occl = []
     bbox_unobserved = []
     bbox_hit = []
     
-    # where the fuck do these values come from
-    # TODO: redo the occlusion mapping and very clearly save the min_bound and max_bound of the voxelgrid in 3D coordinates
-    offset = [+0.2,+0.1,-0.6]
-    # offset = [0,0,0]
-    
-    
     for x in range(int(crop_min[0]), int(crop_max[0])):
         for y in range(int(crop_min[1]), int(crop_max[1])):
             for z in range(int(crop_min[2]), int(crop_max[2])):
-                min_bound = min_pc + np.array([x,y,z])*vox_dim + offset
+                min_bound = min_occpy_grid + np.array([x,y,z])*vox_dim
                 max_bound = min_bound + vox_dim
                 if occmap[x,y,z] == 3:
                     # add mesh cube
@@ -185,10 +168,8 @@ def occmap_vis_pyvista(occmap_file, pointcloud_file):
         plotter.add_mesh(pv_mesh_unobserved, opacity=0.2, color='blue')
         
     # add point cloud
-    min_pc_crop = min_pc + crop_min*vox_dim + offset
-    max_pc_crop = min_pc + crop_max*vox_dim + offset
-    print(min_pc_crop)
-    print(max_pc_crop)
+    min_pc_crop = min_occpy_grid + crop_min*vox_dim
+    max_pc_crop = min_occpy_grid + crop_max*vox_dim
     mask = np.all((points >= min_pc_crop) & (points <= max_pc_crop), axis=1)
     points_in_crop = points[mask]
     point_cloud = pv.PolyData(points_in_crop)
@@ -196,13 +177,13 @@ def occmap_vis_pyvista(occmap_file, pointcloud_file):
     plotter.add_points(point_cloud, style="points", point_size=2)
     
     plotter.show()
-    
+
 
 def main():
-
+    occmap_settings_file = "/Stor1/wout/OcclusionPaper/data_barbara/occpy_out_old/occpy_settings.npz"
     occmap_file = "/Stor1/wout/OcclusionPaper/data_barbara/occpy_out_old/Classification_all.npy"
     pointcloud_file = "/Stor1/wout/OcclusionPaper/data_barbara/occpy_out_old/ABI_2t_1cm_SOR_6_10.las"
-    occmap_vis_pyvista(occmap_file, pointcloud_file)
+    occmap_vis_pyvista(occmap_file, pointcloud_file, occmap_settings_file)
 
 if __name__ == "__main__":
     main()

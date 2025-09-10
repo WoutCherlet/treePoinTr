@@ -21,10 +21,10 @@ Goal: initial experiment
 
 Requirements:
  - Process input data:  
-         - get cubes of CLS data where there is at least some points not present in the TLS data  
-         - divide into testing, training and validation cubes
- - Train a model: start from Aline's weights, retrain on CLS cubes
- - Get some qualitative results, maybe on independent trees or just on test cubes.
+         - get cubes of CLS data where there is at least some points not present in the TLS data  DONE
+         - divide into testing, training and validation cubes DONE
+ - Train a model: start from Aline's weights, retrain on CLS cubes DONE
+ - Get some qualitative results, maybe on independent trees or just on test cubes. TODO
 
 + Discuss potential of integrating occlusion mapping and point cloud completion
 
