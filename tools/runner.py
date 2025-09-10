@@ -98,7 +98,7 @@ def run_net(args, config, train_writer=None, val_writer=None):
     
             scale = torch.rand(1).cuda() * (1.2 - 0.8) + 0.8 # create random scale factor
             
-            if dataset_name == 'PCN' or dataset_name == 'Completion3D' or 'ProjectShapeNet' in dataset_name:
+            if dataset_name == 'PCN' or dataset_name == 'Completion3D' or 'ProjectShapeNet' in dataset_name or dataset_name == "CLS":
                 partial = data[0].cuda()
                 gt = data[1].cuda() 
                 
@@ -122,8 +122,6 @@ def run_net(args, config, train_writer=None, val_writer=None):
             num_iter += 1
            
             ret = base_model(partial)
-            print("partial.size(1): " + str(partial.size(1)))
-            print(gt.size(1))           
             
             sparse_loss, dense_loss = base_model.module.get_loss(ret, gt, epoch)
          
@@ -292,7 +290,7 @@ def validate(base_model, test_dataloader, epoch, ChamferDisL1, ChamferDisL2, val
             torch.cuda.synchronize()
      
     # Print testing results
-    shapenet_dict = json.load(open('./data/trees_synset_dict.json', 'r')) # './data/shapenet_synset_dict.json', 'r'
+    shapenet_dict = json.load(open('./data/cls_dict.json', 'r')) # './data/shapenet_synset_dict.json', 'r'
     print_log('============================ TEST RESULTS ============================',logger=logger)
     msg = ''
     msg += 'Taxonomy\t'
@@ -500,7 +498,7 @@ def test(base_model, test_dataloader, ChamferDisL1, ChamferDisL2, args, config, 
     
     results_txt = os.path.join(args.experiment_path, 'testresults.txt')
     
-    shapenet_dict = json.load(open('./data/trees_synset_dict.json', 'r')) # './data/shapenet_synset_dict.json', 'r'
+    shapenet_dict = json.load(open('./data/cls_dict.json', 'r')) # './data/shapenet_synset_dict.json', 'r'
     print_log('============================ TEST RESULTS ============================',logger=logger)
     msg = ''
     msg += 'Taxonomy\t'

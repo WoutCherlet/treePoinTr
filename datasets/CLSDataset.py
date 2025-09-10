@@ -2,9 +2,7 @@ import os
 import torch
 import numpy as np
 import torch.utils.data as data
-from .io import IO
 from .build import DATASETS
-import logging
 import data_transforms
 
 @DATASETS.register_module()
