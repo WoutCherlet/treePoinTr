@@ -1,7 +1,3 @@
-##############################################################
-# % Author: Castle
-# % Date:14/01/2023
-###############################################################
 import argparse
 import os
 import numpy as np
@@ -13,7 +9,6 @@ sys.path.append(os.path.join(BASE_DIR, '../'))
 from tools import builder
 from utils.config import cfg_from_yaml_file
 from utils import misc
-from datasets.io import IO
 from datasets.data_transforms import Compose
 
 
@@ -25,7 +20,6 @@ def get_args():
     parser.add_argument(
         'model_checkpoint', 
         help = 'pretrained weight')
-    parser.add_argument('--data_cfg', type=str, required=True, help='data config file')   
     parser.add_argument("--data_root", "-d", type=str, required=True, help="Data root where blocks are stored")
     parser.add_argument(
         "--out_dir", "-o", type=str, required=True, help="Output directory"
@@ -47,7 +41,9 @@ def get_args():
 def inference_block(model, block_path, args):
 
     # read block
-    block = np.load(os.path.join(args.data_root, block_path))
+    # file name = after first underscore
+    file_path = block_path.split('_', 1)[-1]
+    block = np.load(os.path.join(args.data_root, file_path))
     partial_pc = block['partial']
     
     transform = Compose([{
@@ -88,8 +84,13 @@ def main():
     data_cfg_folder = config['dataset']["test"]['_base_']['DATA_FOLDER']
     data_cfg_file = os.path.join(data_cfg_folder, "test.txt")
     with open(data_cfg_file, 'r') as f:
-        for block_file in f.readlines():
-            inference_block(base_model, block_file, args)
+        all_lines = f.readlines()
+        n_blocks = len(all_lines)
+        print(f"Total number of blocks: {n_blocks}")
+        for i, block_file in enumerate(all_lines):
+            if i % 100 == 0 or i == n_blocks - 1:
+                print(f"Processing block {i+1}/{n_blocks}")
+            inference_block(base_model, block_file.strip(), args)
     
 if __name__ == '__main__':
     main()

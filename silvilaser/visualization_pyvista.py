@@ -179,11 +179,39 @@ def occmap_vis_pyvista(occmap_file, pointcloud_file, settings_file):
     plotter.show()
 
 
+def visualize_block_result(blocks_dir, compl_denormalized_dir, block_id):
+    path_original = os.path.join(blocks_dir, f"{block_id}.npz")
+    path_denormalized = os.path.join(compl_denormalized_dir, f"{block_id}_compl_denormalized.npy")
+
+    block_orig = np.load(path_original)
+    points_partial = block_orig['partial']
+    points_complete = block_orig['complete']
+
+    block_denorm = np.load(path_denormalized)
+
+    plotter = pv.Plotter()
+
+    pc_partial = pv.PolyData(points_partial)
+    plotter.add_points(pc_partial, style="points", point_size=5, color='blue', opacity=0.5)
+    pc_complete = pv.PolyData(points_complete)
+    plotter.add_points(pc_complete, style="points", point_size=5, color='green', opacity=0.5)
+    pc_denorm = pv.PolyData(block_denorm)
+    plotter.add_points(pc_denorm, style="points", point_size=5, color='red', opacity=0.5)
+
+    plotter.show()
+
+    return
+
 def main():
-    occmap_settings_file = "/Stor1/wout/OcclusionPaper/data_barbara/occpy_out_old/occpy_settings.npz"
-    occmap_file = "/Stor1/wout/OcclusionPaper/data_barbara/occpy_out_old/Classification_all.npy"
-    pointcloud_file = "/Stor1/wout/OcclusionPaper/data_barbara/occpy_out_old/ABI_2t_1cm_SOR_6_10.las"
-    occmap_vis_pyvista(occmap_file, pointcloud_file, occmap_settings_file)
+    # occmap_settings_file = "/Stor1/wout/OcclusionPaper/data_barbara/occpy_out_old/occpy_settings.npz"
+    # occmap_file = "/Stor1/wout/OcclusionPaper/data_barbara/occpy_out_old/Classification_all.npy"
+    # pointcloud_file = "/Stor1/wout/OcclusionPaper/data_barbara/occpy_out_old/ABI_2t_1cm_SOR_6_10.las"
+    # occmap_vis_pyvista(occmap_file, pointcloud_file, occmap_settings_file)
+
+    blocks_dir = "/Stor1/wout/OcclusionPaper/CLS_experiment/all_cubes/PER2/blocks/"
+    compl_denormalized_dir = "/Stor1/wout/OcclusionPaper/CLS_experiment/processed_results/train_test_1/denormalized_blocks/PER2"
+    block_id = "block_012_006_024"
+    visualize_block_result(blocks_dir, compl_denormalized_dir, block_id)
 
 if __name__ == "__main__":
     main()

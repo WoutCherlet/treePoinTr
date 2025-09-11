@@ -37,4 +37,7 @@ IDEA: TLS + UAV-LS of deciduous forest: try to get more accurate tree structural
     - completing UAV data: better DBH and height -> better inventory at larger scale
 IDEA: completing summer data from winter data: upper branches -> can be done with Wytham
 
-If possible, integrate occlusion mapping (might be seperate work)
+Integrate occlusion mapping, at least with filtering after the fact
+    - next easiest thing: integrate occlusion map into loss -> sort of masked loss function
+    - other idea: create synthetic point for each occluded voxel, give each point a flag with value 1 for real points and 0 for synthetic points
+        -> idea is that network learns from synthetic points where occluded areas are, and together with real points can make better prediction

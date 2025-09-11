@@ -1,12 +1,10 @@
 import os
-import random
 import numpy as np
 import open3d as o3d
 import glob
 
-import timeit
 from itertools import product
-from util import read_pc_o3d, write_points_np
+from util import write_points_np
 
 
 def get_to_complete_pc(pc_partial, pc_complete, distance_th = 0.01):
@@ -91,6 +89,7 @@ def assign_blocks(points_partial, points_to_complete, min_bound, max_bound, inne
 
     return block_map_partial, block_map_to_complete
 
+# TODO: try jittering?
 def pad_points(points, N):
     l = points.shape[0]
     idx = np.random.choice(l, N - l)
@@ -112,11 +111,6 @@ def farthest_point_sampling(points, N):
     return points[selected_idxs]
 
 def normalize_block(points):
-    """
-    Normalize points to unit sphere
-
-    Returns normalized points
-    """
     centroid = np.mean(points, axis=0)
     points = points - centroid
     scale = np.max(np.linalg.norm(points, axis=1))
