@@ -3,12 +3,12 @@ import os
 import numpy as np
 import open3d as o3d
 
-def denormalize_points(points, centroid, scale):
-    return points * scale + centroid
+from util import write_points_np
 
-def undo_scale_and_shift(blocks_dir, inference_dir, odir):
 
-    os.makedirs(odir, exist_ok=True)
+def merge_blocks(blocks_dir, inference_dir, inner_size, outer_size, odir):
+
+    point_arrs = []
 
     for dir in glob.glob(os.path.join(inference_dir, "*")):
         if not os.path.isdir(dir):
@@ -20,20 +20,19 @@ def undo_scale_and_shift(blocks_dir, inference_dir, odir):
         block_arrs = np.load(npz_file)
         
         p_completed = np.load(os.path.join(dir, 'compl_fine.npy'))
-        p_compl_denormalized = denormalize_points(p_completed, block_arrs['centroid'], block_arrs['scale'])
+        p_compl_denormalized = p_completed*block_arrs['scale'] + block_arrs['centroid']
 
-        if not os.path.exists(os.path.join(odir, f"{id}")):
-            os.makedirs(os.path.join(odir, f"{id}"))
+        # TODO: keep only cube of inner_size in middle
+        # based on origin + outersize
 
-        write_path = os.path.join(odir, f"{id}", f"{block_path}_compl_denormalized.npy")
-        np.save(write_path, p_compl_denormalized)
+        point_arrs.append(p_compl_filtered)
 
+        # TODO: TEMP
         break        
+    
+    all_completed = np.vstack(point_arrs)
 
-
-def merge_blocks(output_dir, inner_size, outer_size, odir):
-
-    # TODO: get all prediction blocks, keep only points within inner box, then merge
+    write_points_np(all_completed, os.path.join(odir, "pc_all_completed.ply"))
 
     return
 
